@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SecureBank Eva - Vaani Voice Demo</title>
+  <style>
+    body { margin:0; font-family:"Segoe UI",system-ui,sans-serif; background:#f0f4f8; color:#0a2540; }
+    header { background:#0a2540; color:#fff; padding:1rem 1.5rem; }
+    main { max-width:720px; margin:0 auto; padding:1.5rem; }
+    .card { background:#fff; border-radius:12px; padding:1.2rem; box-shadow:0 2px 8px rgba(0,0,0,.06); margin-bottom:1rem; }
+    button { background:#0a2540; color:#fff; border:0; border-radius:8px; padding:.7rem 1.2rem; cursor:pointer; font-size:1rem; }
+    input { width:100%; padding:.6rem; margin:.3rem 0 .8rem; border:1px solid #ccc; border-radius:8px; }
+    #log { white-space:pre-wrap; font-size:.85rem; background:#0a2540; color:#b8f5c8; padding:1rem; border-radius:8px; min-height:120px; }
+  </style>
+</head>
+<body>
+<header><h1 style="margin:0">SecureBank Eva — Vaani Voice</h1><p style="opacity:.8">WebRTC voice demo (replaces CES chat-messenger)</p></header>
+<main>
+  <div class="card">
+    <p>1. Create agent <b>securebank-eva</b> in Vaani dashboard → copy <b>agent_id (UUID)</b><br>
+    2. Paste backend Render URL into Vaani Tools (see vaani-tools.md)<br>
+    3. Paste agent_id + API key below → <b>Start voice session</b></p>
+    <label>Vaani API Key (X-API-Key)</label><input id="apikey" placeholder="vaani_..." />
+    <label>Agent ID (UUID)</label><input id="agentid" placeholder="8cf3373e-..." />
+    <label>Your name</label><input id="cname" value="Test User" />
+    <button onclick="start()">🎙️ Talk to Eva</button>
+  </div>
+  <div class="card"><div id="log">log…</div></div>
+  <div class="card" style="font-size:.9rem">
+    Try saying: “Hi”, “I want a credit card”, “start application”, “check status APP-12345678”,
+    “I want to pay an invoice for 250 dollars to Acme”, “yes pay”, “talk to manager”, “my number is +91…”.
+  </div>
+</main>
+<script>
+async function start(){
+  const log = m => document.getElementById('log').textContent += '\n'+m;
+  const key = document.getElementById('apikey').value.trim();
+  const agent_id = document.getElementById('agentid').value.trim();
+  const name = document.getElementById('cname').value.trim() || 'Test User';
+  if(!key || !agent_id){ log('Missing API key or agent_id'); return; }
+  log('Requesting WebRTC session…');
+  const r = await fetch('https://api.vaanivoice.ai/api/trigger-call/', {
+    method:'POST',
+    headers:{ 'X-API-Key': key, 'Content-Type':'application/json' },
+    body: JSON.stringify({ agent_id, medium:'webrtc', metadata:{ customer_name: name } })
+  });
+  const j = await r.json();
+  log(JSON.stringify(j, null, 2));
+  if(j.connection_url || j.token) log('Connect with LiveKit client using token above. See Vaani docs /webrtc/token.');
+  else log('If error, check agent_id, API key, telephony not needed for WebRTC.');
+}
+</script>
+</body>
+</html>
